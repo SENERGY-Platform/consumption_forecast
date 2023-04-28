@@ -66,7 +66,7 @@ class Operator(util.OperatorBase):
             self.update_day_consumption_dict()
             if (self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d')):
                 time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
-                forecast.predict_new_value(time_series_data_frame)
+                predicted_value = forecast.predict_new_value(time_series_data_frame)
             self.consumption_same_day = [data]
         else:
             self.consumption_same_day.append(data)
