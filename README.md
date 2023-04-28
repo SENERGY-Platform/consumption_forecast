@@ -1,3 +1,2 @@
-# Hourly Consumption Profile
+# Daily Forecast
 
-## Config options
