@@ -21,10 +21,14 @@ import pandas as pd
 import numpy as np
 import os
 import pickle
-from . import forecast
+import darts
+import abc
 
 class Operator(util.OperatorBase):
-    def __init__(self, device_id, data_path):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, config):
+        data_path = config['data_path']
         if not os.path.exists(data_path):
             os.mkdir(data_path)
 
@@ -32,6 +36,7 @@ class Operator(util.OperatorBase):
         self.data_history = pd.Series([], index=[],dtype=object)
         self.consumption_same_day = []
         self.timestamp = None
+        self.prediction_length = config['predicition_length']
 
         self.num_days_coll_data = 5
 
@@ -66,7 +71,20 @@ class Operator(util.OperatorBase):
             self.update_day_consumption_dict()
             if (self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d')):
                 time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
-                predicted_value = forecast.predict_new_value(time_series_data_frame)
+                time_series = darts.TimeSeries.from_dataframe(time_series_data_frame)
+                self.fit(time_series)
+                predicted_value = self.predict(self.prediction_length)
+                print(f"Prediction: {predicted_value}")
             self.consumption_same_day = [data]
         else:
             self.consumption_same_day.append(data)
+
+    @abc.abstractmethod
+    def fit(train_time_series):
+        """To be implemented """
+        return 
+
+    @abc.abstractmethod
+    def predict(number_of_steps):
+        """To be implemented """
+        return 

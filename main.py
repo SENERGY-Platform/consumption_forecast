@@ -15,7 +15,7 @@
 """
 
 import util
-import algo
+from algo.estimator_factory import get_estimator
 import json
 import confluent_kafka
 import mf_lib
@@ -46,10 +46,8 @@ if __name__ == '__main__':
     util.logger.debug(f"kafka producer config: {kafka_producer_config}")
     kafka_consumer = confluent_kafka.Consumer(kafka_consumer_config, logger=util.logger)
     kafka_producer = confluent_kafka.Producer(kafka_producer_config, logger=util.logger)
-    operator = algo.Operator(
-        device_id=opr_config.config.device_id,
-        data_path=opr_config.config.data_path
-    )
+    operator = get_estimator(opr_config.config)
+    
     operator.init(
         kafka_consumer=kafka_consumer,
         kafka_producer=kafka_producer,
