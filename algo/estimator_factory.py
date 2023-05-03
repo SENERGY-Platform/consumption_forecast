@@ -1,5 +1,5 @@
-from models.nhits import DartNHITS
-from models.prophet import DartProphet
+from algo.models.nhits import DartNHITS
+from algo.models.prophet import DartProphet
 
 def get_estimator(config):
     model = config['model']
