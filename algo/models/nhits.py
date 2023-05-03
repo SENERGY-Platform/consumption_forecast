@@ -6,7 +6,7 @@ class DartNHITS(Operator):
     def __init__(self, config):
         super()
         kwargs = {}
-        if config['add_time_covariates']:
+        if config.add_time_covariates:
             encoders = create_darts_encoder()
             kwargs['add_encoders'] = encoders
 
