@@ -5,7 +5,10 @@ from algo.operator import Operator
 class DartNHITS(Operator):
     def __init__(self, config):
         super().__init__(config)
-        kwargs = {}
+        kwargs = {
+            "input_chunk_length": 7,
+            "output_chunk_length": 1
+        }
         if config.add_time_covariates:
             encoders = create_darts_encoder()
             kwargs['add_encoders'] = encoders
