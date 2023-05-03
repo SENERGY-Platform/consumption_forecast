@@ -35,7 +35,7 @@ class Config(simple_struct.Structure):
     data_path = "/opt/data"
     logger_level = "warning"
     model = "prophet"
-    prediciton_length = 1
+    prediction_length = 1
     selectors: typing.List[Selector] = None
 
     def __init__(self, d, **kwargs):

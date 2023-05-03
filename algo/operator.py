@@ -28,7 +28,7 @@ class Operator(util.OperatorBase):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, config):
-        data_path = config['data_path']
+        data_path = config.data_path
         if not os.path.exists(data_path):
             os.mkdir(data_path)
 
@@ -36,7 +36,7 @@ class Operator(util.OperatorBase):
         self.data_history = pd.Series([], index=[],dtype=object)
         self.consumption_same_day = []
         self.timestamp = None
-        self.prediction_length = config['predicition_length']
+        self.prediction_length = config.prediction_length
 
         self.num_days_coll_data = 5
 
