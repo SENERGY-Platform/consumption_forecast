@@ -36,6 +36,7 @@ class Config(simple_struct.Structure):
     logger_level = "warning"
     model = "prophet"
     prediction_length = 1
+    add_time_covariates = False
     selectors: typing.List[Selector] = None
 
     def __init__(self, d, **kwargs):

@@ -3,6 +3,7 @@ from .helper import create_darts_encoder
 
 class DartProphet():
     def __init__(self, config) -> None:
+        super().__init__(config)
         kwargs = {}
         if config.add_time_covariates:
             encoders = create_darts_encoder()
