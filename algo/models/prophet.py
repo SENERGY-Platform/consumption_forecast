@@ -4,7 +4,7 @@ from algo.operator import Operator
 
 class DartProphet(Operator):
     def __init__(self, config) -> None:
-        super().__init__()
+        super().__init__(config)
         kwargs = {}
         if config.add_time_covariates:
             encoders = create_darts_encoder()
