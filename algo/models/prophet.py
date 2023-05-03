@@ -1,9 +1,9 @@
 from darts.models import Prophet
 from .helper import create_darts_encoder
 
-class DartProphet():
+class DartProphet(Operator):
     def __init__(self, config) -> None:
-        super().__init__(config)
+        super().__init__()
         kwargs = {}
         if config.add_time_covariates:
             encoders = create_darts_encoder()
