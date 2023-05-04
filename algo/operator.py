@@ -68,10 +68,12 @@ class Operator(util.OperatorBase):
         print('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
         self.data_history = pd.concat([self.data_history, pd.Series([float(data['Consumption'])], index=[self.timestamp])])
         if self.timestamp.date() == self.data_history.index[0].date():
+            self.consumption_same_day.append(data)
             return
         if self.data_history.index[-2].date()<self.timestamp.date():
             self.update_day_consumption_dict()
-            if (self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d')):
+            if self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d'):
+                print('test')
                 time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
                 time_series = darts.TimeSeries.from_dataframe(time_series_data_frame)
                 self.fit(time_series)
