@@ -75,7 +75,8 @@ class Operator(util.OperatorBase):
             if self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d'):
                 print('test')
                 time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
-                time_series = darts.TimeSeries.from_dataframe(time_series_data_frame)
+                print(time_series_data_frame)
+                time_series = darts.TimeSeries.from_dataframe(time_series_data_frame, freq='day')
                 self.fit(time_series)
                 predicted_value = self.predict(self.prediction_length)
                 print(f"Prediction: {predicted_value}")
