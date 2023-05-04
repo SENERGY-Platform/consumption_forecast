@@ -36,7 +36,7 @@ class Operator(util.OperatorBase):
         self.data_history = pd.Series([], index=[],dtype=object)
         self.consumption_same_day = []
         self.timestamp = None
-        self.prediction_length = config.prediction_length
+        self.prediction_length = int(config.prediction_length)
 
         self.num_days_coll_data = 10
 
