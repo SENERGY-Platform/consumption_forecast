@@ -76,7 +76,7 @@ class Operator(util.OperatorBase):
                 time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
                 time_series = darts.TimeSeries.from_dataframe(time_series_data_frame, freq='D')
                 self.fit(time_series)
-                predicted_value = self.predict(self.prediction_length)
+                predicted_value = self.predict(self.prediction_length).first_value()
                 print(f"Prediction: {predicted_value}")
                 return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
             self.consumption_same_day = [data]
