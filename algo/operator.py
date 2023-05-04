@@ -67,6 +67,8 @@ class Operator(util.OperatorBase):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
         print('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
         self.data_history = pd.concat([self.data_history, pd.Series([float(data['Consumption'])], index=[self.timestamp])])
+        if self.timestamp.date() == self.data_history.index[0].date():
+            return
         if self.data_history.index[-2].date()<self.timestamp.date():
             self.update_day_consumption_dict()
             if (self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d')):
@@ -75,6 +77,7 @@ class Operator(util.OperatorBase):
                 self.fit(time_series)
                 predicted_value = self.predict(self.prediction_length)
                 print(f"Prediction: {predicted_value}")
+                return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
             self.consumption_same_day = [data]
         else:
             self.consumption_same_day.append(data)
