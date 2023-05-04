@@ -38,7 +38,7 @@ class Operator(util.OperatorBase):
         self.timestamp = None
         self.prediction_length = config.prediction_length
 
-        self.num_days_coll_data = 5
+        self.num_days_coll_data = 10
 
         self.day_consumption_dict_file_path = f'{data_path}/day_consumption_dict.pickle'
 
