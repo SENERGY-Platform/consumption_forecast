@@ -23,6 +23,7 @@ import os
 import pickle
 import darts
 import abc
+from collections import deque
 
 from util.logger import logger
 
@@ -35,10 +36,12 @@ class Operator(util.OperatorBase):
             os.mkdir(data_path)
 
         self.day_consumption_dict = {}
-        self.data_history = pd.Series([], index=[],dtype=object)
+        self.last_two_data_points = deque(maxlen=2)
         self.consumption_same_day = []
         self.timestamp = None
         self.prediction_length = int(config.prediction_length)
+
+        self.first_data_time = None
 
         self.num_days_coll_data = 10
 
@@ -68,13 +71,15 @@ class Operator(util.OperatorBase):
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
         logger.debug('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
-        self.data_history = pd.concat([self.data_history, pd.Series([float(data['Consumption'])], index=[self.timestamp])])
-        if self.timestamp.date() == self.data_history.index[0].date():
+        self.last_two_data_points.append(data)
+        if len(self.last_two_data_points)==1:
+            self.first_data_time = self.todatetime(self.last_two_data_points[0]['Time']).tz_localize(None)
+        if self.timestamp.date() == self.todatetime(self.last_two_data_points[0]['Time']).tz_localize(None).date():
             self.consumption_same_day.append(data)
             return
-        if self.data_history.index[-2].date()<self.timestamp.date():
+        else:
             self.update_day_consumption_dict()
-            if self.data_history.index[-1]-self.data_history.index[0] >= pd.Timedelta(self.num_days_coll_data,'d'):
+            if self.timestamp-self.first_data_time >= pd.Timedelta(self.num_days_coll_data,'d'):
                 time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
                 time_series = darts.TimeSeries.from_dataframe(time_series_data_frame, freq='D')
                 self.fit(time_series)
@@ -82,8 +87,6 @@ class Operator(util.OperatorBase):
                 logger.debug(f"Prediction: {predicted_value}")
                 return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
             self.consumption_same_day = [data]
-        else:
-            self.consumption_same_day.append(data)
 
     @abc.abstractmethod
     def fit(train_time_series):
