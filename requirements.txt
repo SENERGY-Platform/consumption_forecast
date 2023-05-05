@@ -5,6 +5,6 @@ git+https://github.com/SENERGY-Platform/concurrency-watchdog.git@0.1.1
 confluent_kafka<2
 pandas<2
 kazoo
-statsmodel==0.13.0
+statsmodel==0.13.5
 darts
 python-dotenv==1.0.0
