@@ -72,7 +72,7 @@ class Operator(util.OperatorBase):
     
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
-        logger.debug('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
+        logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
         self.last_two_data_points.append(data)
         if len(self.last_two_data_points)==1:
             self.first_data_time = self.todatetime(self.last_two_data_points[0]['Time']).tz_localize(None)
