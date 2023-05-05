@@ -17,11 +17,11 @@
 __all__ = ("Operator", )
 
 import util
+from .aggregate import aggregate
 import pandas as pd
 import numpy as np
 import os
 import pickle
-import darts
 import abc
 from collections import deque
 
@@ -34,6 +34,8 @@ class Operator(util.OperatorBase):
         data_path = config.data_path
         if not os.path.exists(data_path):
             os.mkdir(data_path)
+
+        self.period = config.time_period
 
         self.day_consumption_dict = {}
         self.last_two_data_points = deque(maxlen=2)
@@ -80,8 +82,8 @@ class Operator(util.OperatorBase):
         else:
             self.update_day_consumption_dict()
             if self.timestamp-self.first_data_time >= pd.Timedelta(self.num_days_coll_data,'d'):
-                time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index')
-                time_series = darts.TimeSeries.from_dataframe(time_series_data_frame, freq='D')
+                time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index', columns=['daily_consumption'])
+                time_series = aggregate(self.period, time_series_data_frame)
                 self.fit(time_series)
                 predicted_value = self.predict(self.prediction_length).first_value()
                 logger.debug(f"Prediction: {predicted_value}")
