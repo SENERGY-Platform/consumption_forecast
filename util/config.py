@@ -17,7 +17,9 @@
 __all__ = ("DeploymentConfig", )
 
 import sevm
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class DeploymentConfig(sevm.Config):
     pipeline_id = None

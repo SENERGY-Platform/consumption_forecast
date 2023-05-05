@@ -6,3 +6,4 @@ confluent_kafka<2
 pandas<2
 kazoo
 darts
+python-dotenv==1.0.0

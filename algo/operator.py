@@ -24,6 +24,8 @@ import pickle
 import darts
 import abc
 
+from util.logger import logger
+
 class Operator(util.OperatorBase):
     __metaclass__ = abc.ABCMeta
 
@@ -65,7 +67,7 @@ class Operator(util.OperatorBase):
     
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
-        print('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
+        logger.debug('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
         self.data_history = pd.concat([self.data_history, pd.Series([float(data['Consumption'])], index=[self.timestamp])])
         if self.timestamp.date() == self.data_history.index[0].date():
             self.consumption_same_day.append(data)
@@ -77,7 +79,7 @@ class Operator(util.OperatorBase):
                 time_series = darts.TimeSeries.from_dataframe(time_series_data_frame, freq='D')
                 self.fit(time_series)
                 predicted_value = self.predict(self.prediction_length).first_value()
-                print(f"Prediction: {predicted_value}")
+                logger.debug(f"Prediction: {predicted_value}")
                 return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
             self.consumption_same_day = [data]
         else:
