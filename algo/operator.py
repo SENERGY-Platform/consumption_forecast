@@ -45,7 +45,7 @@ class Operator(util.OperatorBase):
 
         self.first_data_time = None
 
-        self.num_days_coll_data = 10
+        self.num_days_coll_data = 20
 
         self.day_consumption_dict_file_path = f'{data_path}/day_consumption_dict.pickle'
 
