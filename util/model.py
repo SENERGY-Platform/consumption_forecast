@@ -33,7 +33,7 @@ class Selector(simple_struct.Structure):
 class Config(simple_struct.Structure):
     device_id: str = None
     data_path = "/opt/data"
-    logger_level = "warning"
+    logger_level = "info"
     model = "prophet"
     prediction_length = 1
     add_time_covariates = False
