@@ -16,6 +16,8 @@ def aggregate(period, data_frame):
     if period=='month':
         data_frame['month'] = data_frame.index.month  # An extra column is added to the data frame that contains the data points' numbers of the month 
         monthly_grouper = data_frame.groupby(['month'])
+        for group in monthly_grouper:
+            print(group)
         monthly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in monthly_grouper], index = [group[1].index[-1] for group in monthly_grouper])
         monthly_time_series = darts.TimeSeries.from_dataframe(monthly_data_frame.iloc[1:], freq='M')
         return monthly_time_series
