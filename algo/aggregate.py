@@ -10,7 +10,7 @@ def aggregate(period, data_frame):
         weekly_grouper = data_frame.groupby(['week'])
         for group in weekly_grouper:
             print(group)
-        weekly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in weekly_grouper], index = [group[1].index[-1] for group in weekly_grouper])
+        weekly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in weekly_grouper if group[1].index[-1].weekday()==6], index = [group[1].index[-1] for group in weekly_grouper if group[1].index[-1].weekday()==6])
         weekly_time_series = darts.TimeSeries.from_dataframe(weekly_data_frame.iloc[1:], freq='W')
         return weekly_time_series
     if period=='month':
