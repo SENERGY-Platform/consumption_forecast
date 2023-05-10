@@ -7,6 +7,8 @@ def aggregate(period, data_frame):
         return dayly_time_series
     if period=='week':
         data_frame['week'] = pd.Series(data_frame.index, index=data_frame.index).dt.isocalendar().week  # An extra column is added to the data frame that contains the data points' numbers of the week 
+        data_frame['week'] = (pd.DataFrame(data_frame.index.year, index = data_frame.index, columns=['year'])['year'].apply(lambda x:str(x)+"W")+
+                                           data_frame['week'].apply(lambda x: str(x).zfill(2)))
         weekly_grouper = data_frame.groupby(['week'])
         for group in weekly_grouper:
             print(group)
