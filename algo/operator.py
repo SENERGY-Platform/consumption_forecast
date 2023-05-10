@@ -38,7 +38,6 @@ class Operator(util.OperatorBase):
         self.period = config.time_period
 
         self.day_consumption_dict = {}
-        self.last_two_data_points = deque(maxlen=2)
         self.consumption_same_day = []
         self.timestamp = None
         self.prediction_length = int(config.prediction_length)
@@ -73,22 +72,23 @@ class Operator(util.OperatorBase):
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
         logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
-        self.last_two_data_points.append(data)
-        if len(self.last_two_data_points)==1:
-            self.first_data_time = self.todatetime(self.last_two_data_points[0]['Time']).tz_localize(None)
-        if self.timestamp.date() == self.todatetime(self.last_two_data_points[0]['Time']).tz_localize(None).date():
+        if self.consumption_same_day == []:
             self.consumption_same_day.append(data)
-            return
+            self.first_data_time = self.timestamp
         else:
-            self.update_day_consumption_dict()
-            if self.timestamp-self.first_data_time >= pd.Timedelta(self.num_days_coll_data,'d'):
-                time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index', columns=['daily_consumption'])
-                time_series = aggregate(self.period, time_series_data_frame)
-                self.fit(time_series)
-                predicted_value = self.predict(self.prediction_length).first_value()
-                logger.info(f"Prediction: {predicted_value}")
-                return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
-            self.consumption_same_day = [data]
+            if self.timestamp.date() == self.todatetime(self.consumption_same_day[-1]['Time']).tz_localize(None).date():
+                self.consumption_same_day.append(data)
+                return
+            else:
+                self.update_day_consumption_dict()
+                if self.timestamp-self.first_data_time >= pd.Timedelta(self.num_days_coll_data,'d'):
+                    time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index', columns=['daily_consumption'])
+                    time_series = aggregate(self.period, time_series_data_frame)
+                    self.fit(time_series)
+                    predicted_value = self.predict(self.prediction_length).first_value()
+                    logger.info(f"Prediction: {predicted_value}")
+                    return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
+                self.consumption_same_day = [data]
 
     @abc.abstractmethod
     def fit(train_time_series):
