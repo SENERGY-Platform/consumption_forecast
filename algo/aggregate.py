@@ -12,7 +12,7 @@ def aggregate(period, data_frame):
         weekly_grouper = data_frame.groupby(['week'])
         for group in weekly_grouper:
             print(group)
-        weekly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in weekly_grouper if (group[1].index[-1].weekday()==6 and len(group)==7)], index = [group[1].index[-1] for group in weekly_grouper if (group[1].index[-1].weekday()==6 and len(group)==7)])
+        weekly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in weekly_grouper if (group[1].index[-1].weekday()==6 and len(group[1])==7)], index = [group[1].index[-1] for group in weekly_grouper if (group[1].index[-1].weekday()==6 and len(group[1])==7)])
         weekly_time_series = darts.TimeSeries.from_dataframe(weekly_data_frame, freq='W')
         return weekly_time_series
     if period=='month':
@@ -21,6 +21,6 @@ def aggregate(period, data_frame):
         monthly_grouper = data_frame.groupby(['month'])
         for group in monthly_grouper:
             print(group)
-        monthly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group) >= 25)], index = [group[1].index[-1] for group in monthly_grouper (group[1].index[-1].is_month_end and len(group) >= 25)])
+        monthly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)], index = [group[1].index[-1] for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)])
         monthly_time_series = darts.TimeSeries.from_dataframe(monthly_data_frame, freq='M')
         return monthly_time_series
