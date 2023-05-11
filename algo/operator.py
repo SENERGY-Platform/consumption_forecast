@@ -87,6 +87,7 @@ class Operator(util.OperatorBase):
                     self.fit(time_series)
                     predicted_value = self.predict(self.prediction_length).first_value()
                     logger.info(f"Prediction: {predicted_value}")
+                    self.consumption_same_day = [data]
                     return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
                 self.consumption_same_day = [data]
 
