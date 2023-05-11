@@ -64,7 +64,7 @@ class Operator(util.OperatorBase):
         day_consumption_min = float(self.consumption_same_day[min_index]['Consumption'])
         overall_day_consumption = day_consumption_max-day_consumption_min
         if np.isnan(overall_day_consumption)==False:
-            self.day_consumption_dict[self.todatetime(self.consumption_same_day[-1]['Time']).tz_localize(None).date()] = overall_day_consumption
+            self.day_consumption_dict[self.todatetime(self.consumption_same_day[-1]['Time']).tz_localize(None).floor('d')] = overall_day_consumption
         with open(self.day_consumption_dict_file_path, 'wb') as f:
             pickle.dump(self.day_consumption_dict, f)
         return
