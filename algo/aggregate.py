@@ -21,6 +21,9 @@ def aggregate(period, data_frame):
         monthly_grouper = data_frame.groupby(['month'])
         for group in monthly_grouper:
             print(group)
-        monthly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)], index = [group[1].index[-1] for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)])
-        monthly_time_series = darts.TimeSeries.from_dataframe(monthly_data_frame, freq='M')
-        return monthly_time_series
+        if [group for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)] != []:
+            monthly_data_frame = pd.DataFrame([group[1]['daily_consumption'].sum() for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)], index = [group[1].index[-1] for group in monthly_grouper if (group[1].index[-1].is_month_end and len(group[1]) >= 25)])
+            monthly_time_series = darts.TimeSeries.from_dataframe(monthly_data_frame, freq='M')
+            return monthly_time_series
+        else:
+            return []
