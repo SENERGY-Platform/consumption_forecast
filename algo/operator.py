@@ -78,17 +78,19 @@ class Operator(util.OperatorBase):
         else:
             if self.timestamp.date() == self.todatetime(self.consumption_same_day[-1]['Time']).tz_localize(None).date():
                 self.consumption_same_day.append(data)
-                return
             else:
                 self.update_day_consumption_dict()
                 if self.timestamp-self.first_data_time >= pd.Timedelta(self.num_days_coll_data,'d'):
                     time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index', columns=['daily_consumption'])
                     time_series = aggregate(self.period, time_series_data_frame)
-                    self.fit(time_series)
-                    predicted_value = self.predict(self.prediction_length).first_value()
-                    logger.info(f"Prediction: {predicted_value}")
                     self.consumption_same_day = [data]
-                    return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
+                    if len(time_series) >= 3:
+                        self.fit(time_series)
+                        predicted_value = self.predict(self.prediction_length).first_value()
+                        logger.info(f"Prediction: {predicted_value}")
+                        return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
+                    else:
+                        return
                 self.consumption_same_day = [data]
 
     @abc.abstractmethod
