@@ -42,11 +42,14 @@ class Operator(util.OperatorBase):
         self.timestamp = None
         self.prediction_length = int(config.prediction_length)
 
+        self.predicted_values = []
+
         self.first_data_time = None
 
         self.num_days_coll_data = 30
 
         self.day_consumption_dict_file_path = f'{data_path}/day_consumption_dict.pickle'
+        self.predicted_values_file = f'{data_path}/predicted_values.pickle'
 
     def todatetime(self, timestamp):
         if str(timestamp).isdigit():
@@ -88,6 +91,9 @@ class Operator(util.OperatorBase):
                         self.fit(time_series)
                         predicted_value = self.predict(self.prediction_length).first_value()
                         logger.info(f"Prediction: {predicted_value}")
+                        self.predicted_values.append((self.timestamp, predicted_value))
+                        with open(self.predicted_values_file, 'rb') as f:
+                            pickle.dump(self.predicted_values,f)
                         return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
                     else:
                         return
