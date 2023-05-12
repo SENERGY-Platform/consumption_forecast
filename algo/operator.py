@@ -92,7 +92,7 @@ class Operator(util.OperatorBase):
                         predicted_value = self.predict(self.prediction_length).first_value()
                         logger.info(f"Prediction: {predicted_value}")
                         self.predicted_values.append((self.timestamp, predicted_value))
-                        with open(self.predicted_values_file, 'rb') as f:
+                        with open(self.predicted_values_file, 'wb') as f:
                             pickle.dump(self.predicted_values,f)
                         return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
                     else:
