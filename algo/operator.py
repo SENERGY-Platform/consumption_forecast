@@ -81,6 +81,8 @@ class Operator(util.OperatorBase):
     
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
+        if pd.Timestamp.now().tz_localize(None)-self.timestamp >= 8*pd.Timedelta(30,'days'):
+            return
         logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
         if self.consumption_same_day == []:
             self.consumption_same_day.append(data)
