@@ -51,6 +51,13 @@ class Operator(util.OperatorBase):
         self.day_consumption_dict_file_path = f'{data_path}/day_consumption_dict.pickle'
         self.predicted_values_file = f'{data_path}/predicted_values.pickle'
 
+        if os.path.exists(self.day_consumption_dict_file_path):
+            with open(self.day_consumption_dict_file_path, 'rb') as f:
+                self.day_consumption_dict = pickle.load(f)
+        if os.path.exists(self.predicted_values_file):
+            with open(self.predicted_values_file, 'rb') as f:
+                self.predicted_values = pickle.load(f)
+
     def todatetime(self, timestamp):
         if str(timestamp).isdigit():
             if len(str(timestamp))==13:
