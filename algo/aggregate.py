@@ -1,10 +1,13 @@
 import pandas as pd
 import darts
+from darts.dataprocessing.transformers import MissingValuesFiller
 
 def aggregate(period, data_frame):
     if period=='day':
-        dayly_time_series = darts.TimeSeries.from_dataframe(data_frame, freq='D')
-        return dayly_time_series
+        daily_time_series = darts.TimeSeries.from_dataframe(data_frame, freq='D')
+        transformer = MissingValuesFiller()
+        daily_time_series_filled = transformer.transform(daily_time_series)
+        return daily_time_series_filled
     if period=='week':
         data_frame['week'] = pd.Series(data_frame.index, index=data_frame.index).dt.isocalendar().week  # An extra column is added to the data frame that contains the data points' numbers of the week 
         data_frame['week'] = (pd.DataFrame(data_frame.index.year, index = data_frame.index, columns=['year'])['year'].apply(lambda x:str(x)+"W")+
