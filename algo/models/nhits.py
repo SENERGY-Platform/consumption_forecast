@@ -14,6 +14,7 @@ class DartNHITS(Operator):
             kwargs['add_encoders'] = encoders
 
         self.model = NHiTSModel(num_stacks=3, num_blocks=2, num_layers=1, **kwargs)
+        self.min_training_samples = 8
 
     def fit(self, train_ts):
         self.model.fit(train_ts)

@@ -17,7 +17,7 @@
 __all__ = ("Operator", )
 
 import util
-from .aggregate import aggregate
+from .convert import convert_and_fill_to_timeseries
 import pandas as pd
 import numpy as np
 import os
@@ -37,23 +37,21 @@ class Operator(util.OperatorBase):
 
         self.period = config.time_period
 
-        self.day_consumption_dict = {}
-        self.consumption_same_day = []
+        self.period_consumption_dict = {}
+        self.consumption_same_period = []
         self.timestamp = None
         self.prediction_length = int(config.prediction_length)
 
         self.predicted_values = []
+        self.min_training_samples = 3
 
         self.first_data_time = None
-
-        self.num_days_coll_data = 30
-
-        self.day_consumption_dict_file_path = f'{data_path}/day_consumption_dict.pickle'
+        self.period_consumption_dict_file_path = f'{data_path}/period_consumption_dict.pickle'
         self.predicted_values_file = f'{data_path}/predicted_values.pickle'
 
-        if os.path.exists(self.day_consumption_dict_file_path):
-            with open(self.day_consumption_dict_file_path, 'rb') as f:
-                self.day_consumption_dict = pickle.load(f)
+        if os.path.exists(self.period_consumption_dict_file_path):
+            with open(self.period_consumption_dict_file_path, 'rb') as f:
+                self.period_consumption_dict = pickle.load(f)
         if os.path.exists(self.predicted_values_file):
             with open(self.predicted_values_file, 'rb') as f:
                 self.predicted_values = pickle.load(f)
@@ -67,47 +65,50 @@ class Operator(util.OperatorBase):
         else:
             return pd.to_datetime(timestamp)
 
-    def update_day_consumption_dict(self):
-        min_index = np.argmin([float(datapoint['Consumption']) for datapoint in self.consumption_same_day])
-        max_index = np.argmax([float(datapoint['Consumption']) for datapoint in self.consumption_same_day])
-        day_consumption_max = float(self.consumption_same_day[max_index]['Consumption'])
-        day_consumption_min = float(self.consumption_same_day[min_index]['Consumption'])
-        overall_day_consumption = day_consumption_max-day_consumption_min
-        if np.isnan(overall_day_consumption)==False:
-            self.day_consumption_dict[self.todatetime(self.consumption_same_day[-1]['Time']).tz_localize(None).floor('d')] = overall_day_consumption
-        with open(self.day_consumption_dict_file_path, 'wb') as f:
-            pickle.dump(self.day_consumption_dict, f)
+    def update_period_consumption_dict(self):        
+        min_index = np.argmin([float(datapoint['Consumption']) for datapoint in self.consumption_same_period])
+        max_index = np.argmax([float(datapoint['Consumption']) for datapoint in self.consumption_same_period])
+        consumption_max = float(self.consumption_same_period[max_index]['Consumption'])
+        consumption_min = float(self.consumption_same_period[min_index]['Consumption'])
+        overall_period_consumption = consumption_max-consumption_min
+
+        if not np.isnan(overall_period_consumption):
+            period_key = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None).floor('d')
+            self.period_consumption_dict[period_key] = overall_period_consumption
+
+        with open(self.period_consumption_dict_file_path, 'wb') as f:
+            pickle.dump(self.period_consumption_dict, f)
         return
     
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
-        if pd.Timestamp.now().tz_localize(None)-self.timestamp >= 8*pd.Timedelta(30,'days'):
-            return
         logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
-        if self.consumption_same_day == []:
-            self.consumption_same_day.append(data)
+
+        if self.consumption_same_period == []:
+            self.consumption_same_period.append(data)
             self.first_data_time = self.timestamp
         else:
-            if self.timestamp.date() == self.todatetime(self.consumption_same_day[-1]['Time']).tz_localize(None).date():
-                self.consumption_same_day.append(data)
+            last_timestamp = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None)
+            if (self.period == "day" and self.timestamp.date() == last_timestamp.date() \
+                or (self.period == "week" and self.timestamp.week == last_timestamp.week and self.timestamp.year == last_timestamp.year)
+                or (self.period == "month" and self.timestamp.month == last_timestamp.month and self.timestamp.year == last_timestamp.year)):
+                    self.consumption_same_period.append(data)   
             else:
-                self.update_day_consumption_dict()
-                if self.timestamp-self.first_data_time >= pd.Timedelta(self.num_days_coll_data,'d'):
-                    time_series_data_frame = pd.DataFrame.from_dict(self.day_consumption_dict, orient='index', columns=['daily_consumption'])
-                    time_series = aggregate(self.period, time_series_data_frame)
-                    self.consumption_same_day = [data]
-                    if len(time_series) >= 3:
-                        self.fit(time_series)
-                        predicted_value = self.predict(self.prediction_length).first_value()
-                        logger.info(f"Prediction: {predicted_value}")
-                        self.predicted_values.append((self.timestamp, predicted_value))
-                        with open(self.predicted_values_file, 'wb') as f:
-                            pickle.dump(self.predicted_values,f)
-                        return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
-                    else:
-                        return
-                self.consumption_same_day = [data]
-
+                self.update_period_consumption_dict()
+                self.consumption_same_period = [data]
+                
+                time_series_data_frame = pd.DataFrame.from_dict(self.period_consumption_dict, orient='index', columns=['period_consumption'])
+                time_series = convert_and_fill_to_timeseries(self.period, time_series_data_frame)
+                
+                if len(time_series) >= self.min_training_samples:
+                    self.fit(time_series)
+                    predicted_value = self.predict(self.prediction_length).first_value()
+                    logger.info(f"Prediction: {predicted_value}")
+                    self.predicted_values.append((self.timestamp, predicted_value))
+                    with open(self.predicted_values_file, 'wb') as f:
+                        pickle.dump(self.predicted_values,f)
+                    return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
+        
     @abc.abstractmethod
     def fit(train_time_series):
         """To be implemented """
