@@ -74,6 +74,9 @@ class Operator(util.OperatorBase):
 
         if not np.isnan(overall_period_consumption):
             period_key = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None).floor('d')
+            if self.period == 'week' and period_key.dayofweek < 6:
+                period_key = period_key + (6-period_key.dayofweek)*pd.Timedelta(1,'d')
+            #TODO: Same thing for months
             self.period_consumption_dict[period_key] = overall_period_consumption
 
         with open(self.period_consumption_dict_file_path, 'wb') as f:
