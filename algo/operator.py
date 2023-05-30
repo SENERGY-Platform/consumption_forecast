@@ -23,7 +23,7 @@ import numpy as np
 import os
 import pickle
 import abc
-from collections import deque
+import calendar
 
 from util.logger import logger
 
@@ -74,9 +74,11 @@ class Operator(util.OperatorBase):
 
         if not np.isnan(overall_period_consumption):
             period_key = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None).floor('d')
+            num_days_in_month = calendar.monthrange(period_key.year, period_key.month)[1]
             if self.period == 'week' and period_key.dayofweek < 6:
                 period_key = period_key + (6-period_key.dayofweek)*pd.Timedelta(1,'d')
-            #TODO: Same thing for months
+            if self.period == 'month' and period_key.day < num_days_in_month:
+                period_key = period_key + (num_days_in_month-period_key.day)*pd.Timedelta(1,'d')
             self.period_consumption_dict[period_key] = overall_period_consumption
 
         with open(self.period_consumption_dict_file_path, 'wb') as f:
