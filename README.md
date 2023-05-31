@@ -1,2 +1,2 @@
-# Daily Forecast
+# Daily/Weekly/Monthly Forecast
 
