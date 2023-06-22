@@ -13,7 +13,7 @@ class DartProphet(Operator):
         self.model = Prophet(country_holidays="DE", **kwargs)
         # weekly and yearly seasonalities are automatically included in Prophet
         # https://facebook.github.io/prophet/docs/seasonality,_holiday_effects,_and_regressors.html
-        self.min_training_samples = 3
+        self.min_training_samples = 4
 
     def fit(self, train_ts):
         self.model.fit(train_ts)
