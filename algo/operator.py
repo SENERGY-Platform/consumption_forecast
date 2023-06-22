@@ -105,6 +105,7 @@ class Operator(util.OperatorBase):
                 
                 time_series_data_frame = pd.DataFrame.from_dict(self.period_consumption_dict, orient='index', columns=['period_consumption'])
                 time_series = convert_and_fill_to_timeseries(self.period, time_series_data_frame)
+                print(time_series)
                 
                 if len(time_series) >= self.min_training_samples:
                     self.fit(time_series)
