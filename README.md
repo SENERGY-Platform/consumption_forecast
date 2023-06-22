@@ -1,2 +1,2 @@
-# Daily Forecast
+# Consumption Forecast
 
