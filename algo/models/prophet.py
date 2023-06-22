@@ -7,7 +7,7 @@ class DartProphet(Operator):
         super().__init__(config)
         kwargs = {}
         if config.add_time_covariates:
-            encoders = create_darts_encoder()
+            encoders = create_darts_encoder(self.period)
             kwargs['add_encoders'] = encoders
 
         self.model = Prophet(country_holidays="DE", **kwargs)
