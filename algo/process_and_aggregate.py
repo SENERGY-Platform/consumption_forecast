@@ -41,7 +41,7 @@ def update_same_period_consumption_lists(timestamp, last_timestamp, data, consum
 
 
 def update_period_consumption_dict(period_changed_dict, consumption_same_period_dict, overall_period_consumption_dict):
-    for period in period_changed_dict.keys():
+    for period in consumption_same_period_dict.keys():
         if period_changed_dict[period]:
             consumption_same_period_dict[period].sort(key= lambda data: todatetime(data['Time']))        
             consumption_max = float(consumption_same_period_dict[period][-1]['Consumption'])
@@ -51,14 +51,16 @@ def update_period_consumption_dict(period_changed_dict, consumption_same_period_
             if not np.isnan(overall_period_consumption):
                 period_key = todatetime(consumption_same_period_dict[period][-1]['Time']).tz_localize(None).floor('h')
                 num_days_in_month = calendar.monthrange(period_key.year, period_key.month)[1]
+        
                 if period == 'H':
                     period_key = period_key
                 elif period == 'D':
                     period_key = period_key.floor('d')
-                elif period == 'W' and period_key.dayofweek < 6:
-                    period_key = period_key + (6-period_key.dayofweek)*pd.Timedelta(1,'d')
-                elif period == 'M' and period_key.day < num_days_in_month:
-                    period_key = period_key + (num_days_in_month-period_key.day)*pd.Timedelta(1,'d')
+                elif period == 'W':
+                    period_key = period_key.floor('d') + (6-period_key.dayofweek)*pd.Timedelta(1,'d')
+                elif period == 'M':
+                    period_key = period_key.floor('d') + (num_days_in_month-period_key.day)*pd.Timedelta(1,'d')
+                
                 overall_period_consumption_dict[period][period_key] = overall_period_consumption
     return overall_period_consumption_dict
 

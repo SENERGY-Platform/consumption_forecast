@@ -38,9 +38,9 @@ class Operator(util.OperatorBase):
 
         self.initial_data = True
 
-        self.overall_period_consumption_dict = {period: {} for period in self.periods}
-
         self.periods = config.time_periods
+
+        self.overall_period_consumption_dict = {period: {} for period in self.periods}
 
         self.consumption_same_period_dict = {period: [] for period in self.periods}
         
@@ -82,6 +82,9 @@ class Operator(util.OperatorBase):
                 if new_period:
                     overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[period], orient='index', 
                                                                                              columns=[f'{period}_consumption'])
+                    if period == "M":
+                        print(overall_period_consumption_df)
+
                     overall_period_consumption_ts = convert_and_fill_to_timeseries(period, overall_period_consumption_df)
                     
                     self.consumption_same_period_dict[period] = [data] 
@@ -93,8 +96,10 @@ class Operator(util.OperatorBase):
                         self.predicted_values_dict[period].append((self.timestamp, predicted_value))
                         with open(self.predicted_values_dict_file, 'wb') as f:
                             pickle.dump(self.predicted_values_dict,f)
-                    return {f'forecast_{period}': self.predicted_values_dict[period][-1] for period in self.periods}
-        
+
+            if any(period_changed_dict.values()):
+                return {f'forecast_{period}': self.predicted_values_dict[period][-1][1] for period in self.periods if self.predicted_values_dict[period]}
+            
     @abc.abstractmethod
     def fit(train_time_series):
         """To be implemented """
