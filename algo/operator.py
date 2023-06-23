@@ -67,8 +67,6 @@ class Operator(util.OperatorBase):
 
     def update_period_consumption_dict(self):
         self.consumption_same_period.sort(key= lambda data: self.todatetime(data['Time']))        
-        #min_index = np.argmin([float(datapoint['Consumption']) for datapoint in self.consumption_same_period])
-        #max_index = np.argmax([float(datapoint['Consumption']) for datapoint in self.consumption_same_period])
         consumption_max = float(self.consumption_same_period[-1]['Consumption'])
         consumption_min = float(self.consumption_same_period[0]['Consumption'])
         overall_period_consumption = consumption_max-consumption_min
