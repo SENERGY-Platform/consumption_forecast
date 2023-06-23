@@ -95,7 +95,7 @@ class Operator(util.OperatorBase):
                         with open(self.predicted_values_dict_file, 'wb') as f:
                             pickle.dump(self.predicted_values_dict,f)
 
-            if any(period_changed_dict.values()):
+            if any(period_changed_dict.values()) and self.timestamp.date() == pd.Timestamp.now().date():
                 return {f'forecast_{period}': self.predicted_values_dict[period][-1][1] for period in self.periods if self.predicted_values_dict[period]}
             
     @abc.abstractmethod
