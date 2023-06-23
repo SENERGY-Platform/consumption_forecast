@@ -18,12 +18,13 @@ __all__ = ("Operator", )
 
 import util
 from .convert import convert_and_fill_to_timeseries
+from .process_and_aggregate import update_same_period_consumption_lists, update_period_consumption_dict
 import pandas as pd
-import numpy as np
+from collections import defaultdict
 import os
 import pickle
 import abc
-import calendar
+
 
 from util.logger import logger
 
@@ -35,84 +36,64 @@ class Operator(util.OperatorBase):
         if not os.path.exists(data_path):
             os.mkdir(data_path)
 
-        self.period = config.time_period
+        self.initial_data = True
 
-        self.period_consumption_dict = {}
-        self.consumption_same_period = []
+        self.overall_period_consumption_dict = {}
+
+        self.periods = config.time_periods
+
+        self.consumption_same_period_dict = {period: [] for period in self.periods}
+        
         self.timestamp = None
         self.prediction_length = int(config.prediction_length)
 
-        self.predicted_values = []
+        self.predicted_values_dict = defaultdict(list)
         self.min_training_samples = 3
 
-        self.first_data_time = None
-        self.period_consumption_dict_file_path = f'{data_path}/period_consumption_dict.pickle'
-        self.predicted_values_file = f'{data_path}/predicted_values.pickle'
+        self.overall_period_consumption_dict_file_path = f'{data_path}/overall_period_consumption_dict.pickle'
+        self.predicted_values_dict_file = f'{data_path}/predicted_values_dict.pickle'
 
-        if os.path.exists(self.period_consumption_dict_file_path):
-            with open(self.period_consumption_dict_file_path, 'rb') as f:
-                self.period_consumption_dict = pickle.load(f)
-        if os.path.exists(self.predicted_values_file):
-            with open(self.predicted_values_file, 'rb') as f:
-                self.predicted_values = pickle.load(f)
-
-    def todatetime(self, timestamp):
-        if str(timestamp).isdigit():
-            if len(str(timestamp))==13:
-                return pd.to_datetime(int(timestamp), unit='ms')
-            elif len(str(timestamp))==19:
-                return pd.to_datetime(int(timestamp), unit='ns')
-        else:
-            return pd.to_datetime(timestamp)
-
-    def update_period_consumption_dict(self):
-        self.consumption_same_period.sort(key= lambda data: self.todatetime(data['Time']))        
-        consumption_max = float(self.consumption_same_period[-1]['Consumption'])
-        consumption_min = float(self.consumption_same_period[0]['Consumption'])
-        overall_period_consumption = consumption_max-consumption_min
-
-        if not np.isnan(overall_period_consumption):
-            period_key = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None).floor('d')
-            num_days_in_month = calendar.monthrange(period_key.year, period_key.month)[1]
-            if self.period == 'week' and period_key.dayofweek < 6:
-                period_key = period_key + (6-period_key.dayofweek)*pd.Timedelta(1,'d')
-            if self.period == 'month' and period_key.day < num_days_in_month:
-                period_key = period_key + (num_days_in_month-period_key.day)*pd.Timedelta(1,'d')
-            self.period_consumption_dict[period_key] = overall_period_consumption
-
-        with open(self.period_consumption_dict_file_path, 'wb') as f:
-            pickle.dump(self.period_consumption_dict, f)
-        return
+        if os.path.exists(self.overall_period_consumption_dict_file_path):
+            with open(self.overall_period_consumption_dict_file_path, 'rb') as f:
+                self.overall_period_consumption_dict = pickle.load(f)
+        if os.path.exists(self.predicted_values_dict_file):
+            with open(self.predicted_values_dict_file, 'rb') as f:
+                self.predicted_values_dict = pickle.load(f)
     
     def run(self, data, selector='energy_func'):
         self.timestamp = self.todatetime(data['Time']).tz_localize(None)
         logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
 
-        if self.consumption_same_period == []:
-            self.consumption_same_period.append(data)
-            self.first_data_time = self.timestamp
+        if self.initial_data:
+            for period in self.periods:
+                self.consumption_same_period_dict[period] = [data]
+            self.initial_data = False
+        
         else:
             last_timestamp = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None)
-            if (self.period == "day" and self.timestamp.date() == last_timestamp.date() \
-                or (self.period == "week" and self.timestamp.week == last_timestamp.week and self.timestamp.year == last_timestamp.year)
-                or (self.period == "month" and self.timestamp.month == last_timestamp.month and self.timestamp.year == last_timestamp.year)):
-                    self.consumption_same_period.append(data)   
-            else:
-                self.update_period_consumption_dict()
-                self.consumption_same_period = [data]
-                
-                time_series_data_frame = pd.DataFrame.from_dict(self.period_consumption_dict, orient='index', columns=['period_consumption'])
-                time_series = convert_and_fill_to_timeseries(self.period, time_series_data_frame)
-                print(time_series)
-                
-                if len(time_series) >= self.min_training_samples:
-                    self.fit(time_series)
-                    predicted_value = self.predict(self.prediction_length).first_value()
-                    logger.info(f"Prediction: {predicted_value}")
-                    self.predicted_values.append((self.timestamp, predicted_value))
-                    with open(self.predicted_values_file, 'wb') as f:
-                        pickle.dump(self.predicted_values,f)
-                    return {'value': predicted_value, 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
+
+            period_changed_dict, self.consumption_same_period_dict = update_same_period_consumption_lists(self.timestamp, last_timestamp, data, self.consumption_same_period_dict)
+
+            self.overall_period_consumption_dict = update_period_consumption_dict(period_changed_dict, self.consumption_same_period_dict, self.overall_period_consumption_dict)
+            with open(self.overll_period_consumption_dict_file_path, 'wb') as f:
+                pickle.dump(self.overall_period_consumption_dict, f)
+            
+            for period, new_period in period_changed_dict.keys():
+                if new_period:
+                    overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[period], orient='index', 
+                                                                                             columns=[f'{period}_consumption'])
+                    overall_period_consumption_ts = convert_and_fill_to_timeseries(period, overall_period_consumption_df)
+                    
+                    self.consumption_same_period_dict[period] = [data] 
+
+                    if len(overall_period_consumption_ts) >= self.min_training_samples:
+                        self.fit(overall_period_consumption_ts)
+                        predicted_value = self.predict(self.prediction_length).first_value()
+                        logger.info("Prediction for next " + period + f": {predicted_value}")
+                        self.predicted_values_dict[period].append((self.timestamp, predicted_value))
+                        with open(self.predicted_values_dict_file, 'wb') as f:
+                            pickle.dump(self.predicted_values_dict,f)
+                    return {'predicted_values': [self.predicted_values_dict[period][-1] for period in self.periods], 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
         
     @abc.abstractmethod
     def fit(train_time_series):

@@ -3,7 +3,7 @@ from darts.dataprocessing.transformers.scaler import Scaler
 def create_darts_encoder(period):
     date_covariates = ["month"]
 
-    if period == "day":
+    if period == "D":
         date_covariates.append("dayofweek")
 
     encoders = {
