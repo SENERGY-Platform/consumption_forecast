@@ -93,7 +93,7 @@ class Operator(util.OperatorBase):
                         self.predicted_values_dict[period].append((self.timestamp, predicted_value))
                         with open(self.predicted_values_dict_file, 'wb') as f:
                             pickle.dump(self.predicted_values_dict,f)
-                    return {'predicted_values': [self.predicted_values_dict[period][-1] for period in self.periods], 'timestamp': self.timestamp.strftime('%Y-%m-%d %X')}
+                    return {f'forecast_{period}': self.predicted_values_dict[period][-1] for period in self.periods}
         
     @abc.abstractmethod
     def fit(train_time_series):
