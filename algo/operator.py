@@ -82,8 +82,6 @@ class Operator(util.OperatorBase):
                 if new_period:
                     overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[period], orient='index', 
                                                                                              columns=[f'{period}_consumption'])
-                    if period == "M":
-                        print(overall_period_consumption_df)
 
                     overall_period_consumption_ts = convert_and_fill_to_timeseries(period, overall_period_consumption_df)
                     
