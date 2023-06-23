@@ -18,7 +18,7 @@ __all__ = ("Operator", )
 
 import util
 from .convert import convert_and_fill_to_timeseries
-from .process_and_aggregate import update_same_period_consumption_lists, update_period_consumption_dict
+from .process_and_aggregate import update_same_period_consumption_lists, update_period_consumption_dict, todatetime
 import pandas as pd
 from collections import defaultdict
 import os
@@ -61,7 +61,7 @@ class Operator(util.OperatorBase):
                 self.predicted_values_dict = pickle.load(f)
     
     def run(self, data, selector='energy_func'):
-        self.timestamp = self.todatetime(data['Time']).tz_localize(None)
+        self.timestamp = todatetime(data['Time']).tz_localize(None)
         logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
 
         if self.initial_data:
@@ -70,12 +70,12 @@ class Operator(util.OperatorBase):
             self.initial_data = False
         
         else:
-            last_timestamp = self.todatetime(self.consumption_same_period[-1]['Time']).tz_localize(None)
+            last_timestamp = todatetime(self.consumption_same_period_dict[self.periods[0]][-1]['Time']).tz_localize(None)
 
             period_changed_dict, self.consumption_same_period_dict = update_same_period_consumption_lists(self.timestamp, last_timestamp, data, self.consumption_same_period_dict)
 
             self.overall_period_consumption_dict = update_period_consumption_dict(period_changed_dict, self.consumption_same_period_dict, self.overall_period_consumption_dict)
-            with open(self.overll_period_consumption_dict_file_path, 'wb') as f:
+            with open(self.overall_period_consumption_dict_file_path, 'wb') as f:
                 pickle.dump(self.overall_period_consumption_dict, f)
             
             for period, new_period in period_changed_dict.keys():

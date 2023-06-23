@@ -63,7 +63,7 @@ def update_period_consumption_dict(period_changed_dict, consumption_same_period_
     return overall_period_consumption_dict
 
 
-def todatetime(self, timestamp):
+def todatetime(timestamp):
         if str(timestamp).isdigit():
             if len(str(timestamp))==13:
                 return pd.to_datetime(int(timestamp), unit='ms')
