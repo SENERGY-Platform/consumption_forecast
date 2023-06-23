@@ -38,7 +38,7 @@ class Operator(util.OperatorBase):
 
         self.initial_data = True
 
-        self.overall_period_consumption_dict = {}
+        self.overall_period_consumption_dict = {period: {} for period in self.periods}
 
         self.periods = config.time_periods
 
@@ -78,7 +78,7 @@ class Operator(util.OperatorBase):
             with open(self.overall_period_consumption_dict_file_path, 'wb') as f:
                 pickle.dump(self.overall_period_consumption_dict, f)
             
-            for period, new_period in period_changed_dict.keys():
+            for period, new_period in period_changed_dict.items():
                 if new_period:
                     overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[period], orient='index', 
                                                                                              columns=[f'{period}_consumption'])
