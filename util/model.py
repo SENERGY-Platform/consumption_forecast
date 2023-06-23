@@ -38,12 +38,15 @@ class Config(simple_struct.Structure):
     prediction_length = 1
     add_time_covariates = False
     selectors: typing.List[Selector] = None
-    time_period = "day"
+    time_periods = ["D"]
 
     def __init__(self, d, **kwargs):
         super().__init__(d, **kwargs)
         if self.selectors:
             self.selectors = [Selector(s) for s in json.loads(self.selectors)]
+        
+        if self.time_periods:
+            self.time_periods = self.time_periods.split(',')
 
 
 class Mapping(simple_struct.Structure):
