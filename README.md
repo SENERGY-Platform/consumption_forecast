@@ -4,8 +4,8 @@
 
 | key                | type                                                    | description                                                  |  default |
 |--------------------|---------------------------------------------------------|--------------------------------------------------------------|----------|
-| `model`               | string                                               | Name of used prediction model; either 'prophet' or 'nhits'   | prophet  |
-| `add_time_covariates` | string                                               | If set to True add. data variables can be put into the model |  False   |
+| `model`               | string                                               | Name of used prediction model; either 'prophet' or 'nhits'   | 'prophet'|
+| `add_time_covariates` | bool                                                 | If set to True add. data variables can be put into the model |  False   |
 | `time_periods`        | string                                               | comma sep. str containing the values 'H', 'D', 'W', 'M'      |   'D'    |
 
 Additional explanation for the config variable 'time_periods': 
