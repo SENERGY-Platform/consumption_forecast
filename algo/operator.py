@@ -38,10 +38,11 @@ class Operator(util.OperatorBase):
 
         self.initial_data = True
 
+        self.periods = config.time_periods
+
         self.overall_period_consumption_dict = {period: {} for period in self.periods}
 
         self.periods = config.time_periods
-        self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month'}
 
         self.consumption_same_period_dict = {period: [] for period in self.periods}
         
@@ -85,6 +86,7 @@ class Operator(util.OperatorBase):
                 if new_period:
                     overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[period], orient='index', 
                                                                                              columns=[f'{period}_consumption'])
+
                     overall_period_consumption_ts = convert_and_fill_to_timeseries(period, overall_period_consumption_df)
 
                     self.last_total_value_dict[period] = self.consumption_same_period_dict[period][-1]
@@ -98,9 +100,7 @@ class Operator(util.OperatorBase):
                         self.predicted_values_dict[period].append((self.timestamp, predicted_value))
                         with open(self.predicted_values_dict_file, 'wb') as f:
                             pickle.dump(self.predicted_values_dict,f)
-                    return {f'{self.period_translation_dict[period]}Prediction': self.predicted_values_dict[period][-1][1] for period in self.periods}|{
-                        f'{self.period_translation_dict[period]}Prediction_Total': self.predicted_values_dict[period][-1][1]+ self.last_total_value_dict[period]['Consumption'] for period in self.periods}|{
-                            f'{self.period_translation_dict[period]}Timestamp': todatetime(self.last_total_value_dict[period]['Time']).tz_localize(None)+pd.Timedelta(1,period) for period in self.periods}
+                    return {f'forecast_{period}': self.predicted_values_dict[period][-1] for period in self.periods}
         
     @abc.abstractmethod
     def fit(train_time_series):
