@@ -24,6 +24,7 @@ from collections import defaultdict
 import os
 import pickle
 import abc
+import math
 
 
 from util.logger import logger
@@ -39,7 +40,8 @@ class Operator(util.OperatorBase):
         self.initial_data = True
 
         self.periods = config.time_periods
-        self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month'}
+        self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month', 'Y': 'Year'}
+        self.period_single_or_multi_output = {'H': 'H', 'D': 'D', 'W': 'W', 'M': 'W', 'Y': ''}
 
         self.overall_period_consumption_dict = {period: {} for period in self.periods}
 
@@ -48,7 +50,6 @@ class Operator(util.OperatorBase):
         self.consumption_same_period_dict = {period: [] for period in self.periods}
         
         self.timestamp = None
-        self.prediction_length = int(config.prediction_length)
 
         self.predicted_values_dict = defaultdict(list)
         self.min_training_samples = 3
@@ -95,16 +96,70 @@ class Operator(util.OperatorBase):
                     self.consumption_same_period_dict[period] = [data] 
 
                     if len(overall_period_consumption_ts) >= self.min_training_samples:
-                        self.fit(overall_period_consumption_ts)
-                        predicted_value = self.predict(self.prediction_length).first_value()
+                        choosen_frequency = self.frequency[period]
+                        if choosen_frequency == period:
+                            predicted_value = self.predict_single_output(overall_period_consumption_ts)
+                        else:
+                            predicted_value = self.predict_multi_output(choosen_frequency, period_changed_dict, period)
+
                         logger.info("Prediction for next " + period + f": {predicted_value}")
                         self.predicted_values_dict[period].append((self.timestamp, predicted_value))
                         with open(self.predicted_values_dict_file, 'wb') as f:
                             pickle.dump(self.predicted_values_dict,f)
-                    return {f'{self.period_translation_dict[period]}Prediction': self.predicted_values_dict[period][-1] for period in self.periods}|{
-                            f'{self.period_translation_dict[period]}PredictionTotal': self.predicted_values_dict[period][-1] + self.last_total_value_dict[period]['Consumption'] for period in self.periods}|{
-                            f'{self.period_translation_dict[period]}Timestamp': todatetime(self.last_total_value_dict[period]['Time']).tz_localize(None) + pd.Timedelta(1,period)for period in self.periods}
+                    
+            return {
+                f'{self.period_translation_dict[period]}Prediction': self.predicted_values_dict[period][-1] for period in self.periods
+            }|{
+                f'{self.period_translation_dict[period]}PredictionTotal': self.predicted_values_dict[period][-1] + self.last_total_value_dict[period]['Consumption'] for period in self.periods
+            }|{
+                f'{self.period_translation_dict[period]}Timestamp': self.timestamp.to_period(period).to_timestamp(how="end") for period in self.periods
+            }
+
+    def predict_single_output(self, overall_period_consumption_ts):
+        self.fit(overall_period_consumption_ts)
+
+        n_steps = 1
+        predicted_value = self.predict(n_steps).first_value()
+        return predicted_value
+
+    def predict_multi_output(self, choosen_frequency, period_changed_dict, period):
+        overall_period_consumption_ts = period_changed_dict[choosen_frequency]
+        self.fit(overall_period_consumption_ts)
+
+        missing_steps, weekly_proportion = self.compute_output_nr()
         
+        predicted_values = self.predict(missing_steps).first_value()
+        predicted_value = predicted_values.sum(axis=0).values().item()
+        predicted_total = self.compute_total_pred(predicted_values, overall_period_consumption_ts, period, weekly_proportion)
+        return predicted_value, predicted_total
+
+    def compute_output_nr(self, small_period, target_period, time_series):# ts: Darts.Timeseries of frequency (1 per small_period)
+        time_last_value = time_series.time_index[-1]
+        end_next_target_period = time_last_value.to_period(target_period).to_timestamp(how="end")
+        time_until_next_target_period = end_next_target_period - time_last_value
+        
+        if small_period == 'H':
+            return int(time_until_next_target_period/pd.Timedelta(1,small_period)), None
+        elif small_period == 'D':
+            return int(time_until_next_target_period/pd.Timedelta(1,small_period)), None
+        elif small_period == 'W':
+            number_weeks_proportion = time_until_next_target_period/pd.Timedelta(1,'W') 
+            return math.ceil(number_weeks_proportion), number_weeks_proportion
+        
+    def compute_total_pred(self, predicted_series, true_values_series, target_period, weekly_proportion=None):
+        time_last_value = true_values_series.time_index[-1]
+        begin_last_period = time_last_value.to_period(target_period).to_timestamp(how="begin")
+        true_sum_since_last_period_begin = true_values_series[begin_last_period:].sum(axis=0).values().item()
+        
+        if weekly_proportion:
+            prediction_for_overlapping_week = weekly_proportion * predicted_series[-1].values().item()
+            predictions_for_weeks_inside_period = predicted_series[:-1].sum(axis=0).values().item()
+            predicted_sum_from_now_until_end_of_period = prediction_for_overlapping_week + predictions_for_weeks_inside_period
+        else:
+            predicted_sum_from_now_until_end_of_period = predicted_series.sum(axis=0).values().item()
+        
+        return true_sum_since_last_period_begin + predicted_sum_from_now_until_end_of_period
+
     @abc.abstractmethod
     def fit(train_time_series):
         """To be implemented """
