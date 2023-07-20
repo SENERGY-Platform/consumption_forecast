@@ -41,7 +41,7 @@ class Operator(util.OperatorBase):
 
         self.periods = config.time_periods
         self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month', 'Y': 'Year'}
-        self.period_single_or_multi_output = {'H': 'H', 'D': 'D', 'W': 'W', 'M': 'W', 'Y': ''}
+        self.period_single_or_multi_output = {'H': 'H', 'D': 'D', 'W': 'D', 'M': 'D', 'Y': 'W'}
 
         self.overall_period_consumption_dict = {period: {} for period in self.periods}
 
@@ -96,11 +96,11 @@ class Operator(util.OperatorBase):
                     self.consumption_same_period_dict[period] = [data] 
 
                     if len(overall_period_consumption_ts) >= self.min_training_samples:
-                        choosen_frequency = self.frequency[period]
-                        if choosen_frequency == period:
+                        chosen_frequency = self.period_single_or_multi_output[period]
+                        if chosen_frequency == period:
                             predicted_value = self.predict_single_output(overall_period_consumption_ts)
                         else:
-                            predicted_value = self.predict_multi_output(choosen_frequency, period_changed_dict, period)
+                            predicted_value = self.predict_multi_output(chosen_frequency, period_changed_dict, period)
 
                         logger.info("Prediction for next " + period + f": {predicted_value}")
                         self.predicted_values_dict[period].append((self.timestamp, predicted_value))
@@ -122,14 +122,14 @@ class Operator(util.OperatorBase):
         predicted_value = self.predict(n_steps).first_value()
         return predicted_value
 
-    def predict_multi_output(self, choosen_frequency, period_changed_dict, period):
-        overall_period_consumption_ts = period_changed_dict[choosen_frequency]
+    def predict_multi_output(self, chosen_frequency, period_changed_dict, period):
+        overall_period_consumption_ts = period_changed_dict[chosen_frequency]
         self.fit(overall_period_consumption_ts)
 
         missing_steps, weekly_proportion = self.compute_output_nr()
         
         predicted_values = self.predict(missing_steps).first_value()
-        predicted_value = predicted_values.sum(axis=0).values().item()
+        predicted_value = predicted_values.sum(axis=0).first_value()
         predicted_total = self.compute_total_pred(predicted_values, overall_period_consumption_ts, period, weekly_proportion)
         return predicted_value, predicted_total
 
@@ -149,14 +149,14 @@ class Operator(util.OperatorBase):
     def compute_total_pred(self, predicted_series, true_values_series, target_period, weekly_proportion=None):
         time_last_value = true_values_series.time_index[-1]
         begin_last_period = time_last_value.to_period(target_period).to_timestamp(how="begin")
-        true_sum_since_last_period_begin = true_values_series[begin_last_period:].sum(axis=0).values().item()
+        true_sum_since_last_period_begin = true_values_series[begin_last_period:].sum(axis=0).first_value()
         
         if weekly_proportion:
-            prediction_for_overlapping_week = weekly_proportion * predicted_series[-1].values().item()
-            predictions_for_weeks_inside_period = predicted_series[:-1].sum(axis=0).values().item()
+            prediction_for_overlapping_week = weekly_proportion * predicted_series[-1].first_value()
+            predictions_for_weeks_inside_period = predicted_series[:-1].sum(axis=0).first_value()
             predicted_sum_from_now_until_end_of_period = prediction_for_overlapping_week + predictions_for_weeks_inside_period
         else:
-            predicted_sum_from_now_until_end_of_period = predicted_series.sum(axis=0).values().item()
+            predicted_sum_from_now_until_end_of_period = predicted_series.sum(axis=0).first_value()
         
         return true_sum_since_last_period_begin + predicted_sum_from_now_until_end_of_period
 
