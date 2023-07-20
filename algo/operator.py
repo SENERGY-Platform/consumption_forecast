@@ -84,25 +84,25 @@ class Operator(util.OperatorBase):
             with open(self.overall_period_consumption_dict_file_path, 'wb') as f:
                 pickle.dump(self.overall_period_consumption_dict, f)
             
-            for period, new_period in period_changed_dict.items():
-                if new_period:
-                    overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[period], orient='index', 
-                                                                                             columns=[f'{period}_consumption'])
+            for period in self.periods:
+                if period_changed_dict[self.period_single_or_multi_output[period]]:
+                    timeseries_frequency = self.period_single_or_multi_output[period]
+                    overall_period_consumption_df = pd.DataFrame.from_dict(self.overall_period_consumption_dict[timeseries_frequency], orient='index', 
+                                                                                             columns=[f'{timeseries_frequency}_consumption'])
 
-                    overall_period_consumption_ts = convert_and_fill_to_timeseries(period, overall_period_consumption_df)
+                    overall_period_consumption_ts = convert_and_fill_to_timeseries(timeseries_frequency, overall_period_consumption_df)
 
                     self.last_total_value_dict[period] = self.consumption_same_period_dict[period][-1]
                     
-                    self.consumption_same_period_dict[period] = [data] 
+                    self.consumption_same_period_dict[timeseries_frequency] = [data] 
 
                     if len(overall_period_consumption_ts) >= self.min_training_samples:
-                        chosen_frequency = self.period_single_or_multi_output[period]
-                        if chosen_frequency == period:
+                        if timeseries_frequency == period:
                             predicted_value = self.predict_single_output(overall_period_consumption_ts)
                         else:
-                            predicted_value = self.predict_multi_output(chosen_frequency, period_changed_dict, period)
+                            predicted_value = self.predict_multi_output(timeseries_frequency, period, overall_period_consumption_ts)
 
-                        logger.info("Prediction for next " + period + f": {predicted_value}")
+                        logger.info("Prediction for this " + period + f": {predicted_value}")
                         self.predicted_values_dict[period].append((self.timestamp, predicted_value))
                         with open(self.predicted_values_dict_file, 'wb') as f:
                             pickle.dump(self.predicted_values_dict,f)
@@ -122,16 +122,14 @@ class Operator(util.OperatorBase):
         predicted_value = self.predict(n_steps).first_value()
         return predicted_value
 
-    def predict_multi_output(self, chosen_frequency, period_changed_dict, period):
-        overall_period_consumption_ts = period_changed_dict[chosen_frequency]
+    def predict_multi_output(self, time_series_frequency, period, overall_period_consumption_ts):
         self.fit(overall_period_consumption_ts)
 
-        missing_steps, weekly_proportion = self.compute_output_nr()
+        missing_steps, weekly_proportion = self.compute_output_nr(time_series_frequency, period, overall_period_consumption_ts)
         
         predicted_values = self.predict(missing_steps).first_value()
-        predicted_value = predicted_values.sum(axis=0).first_value()
-        predicted_total = self.compute_total_pred(predicted_values, overall_period_consumption_ts, period, weekly_proportion)
-        return predicted_value, predicted_total
+        predicted_period_consumption = self.compute_period_pred(predicted_values, overall_period_consumption_ts, period, weekly_proportion)
+        return predicted_period_consumption
 
     def compute_output_nr(self, small_period, target_period, time_series):# ts: Darts.Timeseries of frequency (1 per small_period)
         time_last_value = time_series.time_index[-1]
@@ -144,9 +142,9 @@ class Operator(util.OperatorBase):
             return int(time_until_next_target_period/pd.Timedelta(1,small_period)), None
         elif small_period == 'W':
             number_weeks_proportion = time_until_next_target_period/pd.Timedelta(1,'W') 
-            return math.ceil(number_weeks_proportion), number_weeks_proportion
+            return math.ceil(number_weeks_proportion), number_weeks_proportion-math.floor(number_weeks_proportion)
         
-    def compute_total_pred(self, predicted_series, true_values_series, target_period, weekly_proportion=None):
+    def compute_period_pred(self, predicted_series, true_values_series, target_period, weekly_proportion=None):
         time_last_value = true_values_series.time_index[-1]
         begin_last_period = time_last_value.to_period(target_period).to_timestamp(how="begin")
         true_sum_since_last_period_begin = true_values_series[begin_last_period:].sum(axis=0).first_value()
