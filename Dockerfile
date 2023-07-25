@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 LABEL org.opencontainers.image.source https://github.com/SENERGY-Platform/consumption_profile
 WORKDIR /usr/src/app
 COPY . .
