@@ -123,6 +123,7 @@ class Operator(util.OperatorBase):
 
         n_steps = 1
         predicted_value = self.predict(n_steps).first_value()
+        predicted_value = (predicted_value + abs(predicted_value))/2 # This cuts the predicted value at 0
         return predicted_value
 
     def predict_multi_output(self, time_series_frequency, period, overall_period_consumption_ts):
@@ -131,6 +132,7 @@ class Operator(util.OperatorBase):
         missing_steps, weekly_proportion = self.compute_output_nr(time_series_frequency, period, overall_period_consumption_ts)
         
         predicted_values = self.predict(missing_steps)
+        predicted_values = (predicted_values + abs(predicted_values))/2 # This cuts the predicted timeseries at 0
         predicted_period_consumption = self.compute_period_pred(predicted_values, overall_period_consumption_ts, period, weekly_proportion)
         return predicted_period_consumption
 
