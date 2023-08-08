@@ -40,9 +40,9 @@ class Operator(util.OperatorBase):
         self.initial_data = True
 
         self.periods = config.time_periods
-        self.all_possible_periods = {'H', 'D', 'W', 'M', 'Y'}
+        self.all_possible_periods = {'H', '4H', 'D', 'W', 'M', 'Y'}
         self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month', 'Y': 'Year'}
-        self.period_single_or_multi_output = {'H': 'H', 'D': 'H', 'W': 'D', 'M': 'D', 'Y': 'W'}
+        self.period_single_or_multi_output = {'H': 'H', 'D': '4H', 'W': 'D', 'M': 'D', 'Y': 'W'}
 
         self.overall_period_consumption_dict = {period: {} for period in self.all_possible_periods}
 
@@ -78,6 +78,8 @@ class Operator(util.OperatorBase):
         
         else:
             last_timestamp = todatetime(self.consumption_same_period_dict[self.periods[0]][-1]['Time']).tz_localize(None)
+            if last_timestamp > self.timestamp:
+                return
 
             period_changed_dict, self.consumption_same_period_dict = update_same_period_consumption_lists(self.timestamp, last_timestamp, data, self.consumption_same_period_dict)
 
@@ -143,6 +145,8 @@ class Operator(util.OperatorBase):
         
         if small_period == 'H':
             return int(time_until_next_target_period/pd.Timedelta(1,small_period)), None
+        elif small_period == '4H':
+            return int(time_until_next_target_period/pd.Timedelta(small_period)), None
         elif small_period == 'D':
             return int(time_until_next_target_period/pd.Timedelta(1,small_period)), None
         elif small_period == 'W':

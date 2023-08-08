@@ -12,6 +12,14 @@ def update_same_period_consumption_lists(timestamp, last_timestamp, data, consum
             else:
                 new_hour = True
             period_changed_dict['H'] = new_hour
+
+        if period == '4H':
+            if timestamp.floor('4H') == last_timestamp.floor('4H'):
+                consumption_same_period_dict['4H'].append(data)
+                new_three_hours = False
+            else:
+                new_three_hours = True
+            period_changed_dict['4H'] = new_three_hours
     
         if period == 'D':
             if timestamp.date() == last_timestamp.date():
@@ -54,6 +62,8 @@ def update_period_consumption_dict(period_changed_dict, consumption_same_period_
         
                 if period == 'H':
                     period_key = period_key
+                if period == '4H':
+                    period_key = period_key.floor('4H')
                 elif period == 'D':
                     period_key = period_key.floor('d')
                 elif period == 'W':
