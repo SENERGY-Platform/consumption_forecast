@@ -139,7 +139,7 @@ class Operator(util.OperatorBase):
 
         n_steps = 1
         predicted_value = self.predict(n_steps).first_value()
-        predicted_value = (predicted_value + abs(predicted_value))/2 # This cuts the predicted value at 0
+        predicted_value = (predicted_value + abs(predicted_value))/2 # This cuts the predicted value at 0 to prevent negative values
         return predicted_value
 
     def predict_multi_output(self, time_series_frequency, period, overall_period_consumption_ts):
