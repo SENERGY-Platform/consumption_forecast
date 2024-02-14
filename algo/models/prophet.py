@@ -3,14 +3,14 @@ from .helper import create_darts_encoder
 from algo.operator import Operator
 
 class DartProphet(Operator):
-    def __init__(self, config) -> None:
-        super().__init__(config)
-        kwargs = {}
-        if config.add_time_covariates:
+    def init(self, *args, **kwargs) -> None:
+        super().init(*args, **kwargs)
+        model_kwargs = {}
+        if self.config.add_time_covariates:
             encoders = create_darts_encoder(self.period)
-            kwargs['add_encoders'] = encoders
+            model_kwargs['add_encoders'] = encoders
 
-        self.model = Prophet(country_holidays="DE", **kwargs)
+        self.model = Prophet(country_holidays="DE", **model_kwargs)
         # weekly and yearly seasonalities are automatically included in Prophet
         # https://facebook.github.io/prophet/docs/seasonality,_holiday_effects,_and_regressors.html
         self.min_training_samples = 4
