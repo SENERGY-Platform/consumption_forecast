@@ -1,6 +1,6 @@
 from darts.models import NHiTSModel
 from .helper import create_darts_encoder
-from algo.operator import Operator
+from main import Operator
 
 class DartNHITS(Operator):
     def init(self, *args, **kwargs):
