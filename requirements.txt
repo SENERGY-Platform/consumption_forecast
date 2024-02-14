@@ -5,5 +5,5 @@ pandas<2
 kazoo
 statsmodels==0.13.5
 lightgbm==3.3.5
-darts
+darts == 0.25.0
 python-dotenv==1.0.0
