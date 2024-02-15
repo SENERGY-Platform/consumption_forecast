@@ -19,7 +19,6 @@ class CustomConfig(Config):
     prediction_length = 1
     add_time_covariates = False
     time_periods = ["D"]
-    logger_level = "info"
 
 class Operator(OperatorBase):
     __metaclass__ = abc.ABCMeta
@@ -66,7 +65,7 @@ class Operator(OperatorBase):
     
     def run(self, data, selector='energy_func'):
         self.timestamp = todatetime(data['Time']).tz_localize(None)
-        logger.info('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
+        print('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
 
         if self.initial_data:
             for period in self.all_possible_periods:
