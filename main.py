@@ -19,4 +19,4 @@ from algo import get_estimator
 from operator_def import Operator
 
 if __name__ == "__main__":
-    OperatorLib(Operator(), name="leakage-detection-operator", git_info_file='git_commit')
+    OperatorLib(Operator(), name="consumption-forecast-operator", git_info_file='git_commit')
