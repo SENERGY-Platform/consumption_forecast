@@ -1,6 +1,8 @@
 from operator_lib.util import OperatorBase, logger
 from algo.convert import convert_and_fill_to_timeseries
 from algo.process_and_aggregate import update_same_period_consumption_lists, update_period_consumption_dict, todatetime
+from algo.models.nhits import DartNHITS
+from algo.models.prophet import DartProphet
 import pandas as pd
 from collections import defaultdict
 import os
@@ -55,6 +57,11 @@ class Operator(OperatorBase):
         if os.path.exists(self.predicted_values_dict_file):
             with open(self.predicted_values_dict_file, 'rb') as f:
                 self.predicted_values_dict = pickle.load(f)
+
+        if self.config.model == 'nhits':
+            self.model = DartNHITS(self.config)
+        elif self.config.model == 'prophet':
+            self.model = DartProphet(self.config)
     
     def run(self, data, selector='energy_func'):
         self.timestamp = todatetime(data['Time']).tz_localize(None)
@@ -123,19 +130,19 @@ class Operator(OperatorBase):
         
 
     def predict_single_output(self, overall_period_consumption_ts):
-        self.fit(overall_period_consumption_ts)
+        self.model.fit(overall_period_consumption_ts)
 
         n_steps = 1
-        predicted_value = self.predict(n_steps).first_value()
+        predicted_value = self.model.predict(n_steps).first_value()
         predicted_value = (predicted_value + abs(predicted_value))/2 # This cuts the predicted value at 0 to prevent negative values
         return predicted_value
 
     def predict_multi_output(self, time_series_frequency, period, overall_period_consumption_ts):
-        self.fit(overall_period_consumption_ts)
+        self.model.fit(overall_period_consumption_ts)
 
         missing_steps, weekly_proportion = self.compute_output_nr(time_series_frequency, period, overall_period_consumption_ts)
         
-        predicted_values = self.predict(missing_steps)
+        predicted_values = self.model.predict(missing_steps)
         predicted_values = (predicted_values + abs(predicted_values))/2 # This cuts the predicted timeseries at 0
         predicted_period_consumption = self.compute_period_pred(predicted_values, overall_period_consumption_ts, period, weekly_proportion)
         return predicted_period_consumption

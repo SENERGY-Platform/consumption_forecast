@@ -19,6 +19,4 @@ from algo import get_estimator
 from operator_def import Operator
 
 if __name__ == "__main__":
-    aux_operator = Operator()
-    operator = get_estimator(aux_operator.config)
     OperatorLib(Operator(), name="leakage-detection-operator", git_info_file='git_commit')

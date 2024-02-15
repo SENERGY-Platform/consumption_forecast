@@ -2,12 +2,11 @@ from darts.models import Prophet
 from .helper import create_darts_encoder
 from operator_def import Operator
 
-class DartProphet(Operator):
-    def init(self, *args, **kwargs) -> None:
-        super().init(*args, **kwargs)
+class DartProphet():
+    def __init__(self, config) -> None:
         model_kwargs = {}
-        if self.config.add_time_covariates:
-            encoders = create_darts_encoder(self.period)
+        if config.add_time_covariates:
+            encoders = create_darts_encoder(config.period)
             model_kwargs['add_encoders'] = encoders
 
         self.model = Prophet(country_holidays="DE", **model_kwargs)
