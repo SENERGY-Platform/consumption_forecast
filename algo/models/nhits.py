@@ -1,8 +1,7 @@
 from darts.models import NHiTSModel
 from .helper import create_darts_encoder
-from operator_def import Operator
 
-class DartNHITS(Operator):
+class DartNHITS():
     def __init__(self, config):
         model_kwargs = {
             "input_chunk_length": 7,

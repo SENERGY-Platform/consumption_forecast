@@ -1,6 +1,5 @@
 from darts.models import Prophet
 from .helper import create_darts_encoder
-from operator_def import Operator
 
 class DartProphet():
     def __init__(self, config) -> None:
