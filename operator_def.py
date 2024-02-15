@@ -1,24 +1,6 @@
-"""
-   Copyright 2022 InfAI (CC SES)
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-"""
-
-__all__ = ("Operator", )
-
-import util
-from .convert import convert_and_fill_to_timeseries
-from .process_and_aggregate import update_same_period_consumption_lists, update_period_consumption_dict, todatetime
+from operator_lib.util import OperatorBase, logger
+from algo.convert import convert_and_fill_to_timeseries
+from algo.process_and_aggregate import update_same_period_consumption_lists, update_period_consumption_dict, todatetime
 import pandas as pd
 from collections import defaultdict
 import os
@@ -26,27 +8,34 @@ import pickle
 import abc
 import math
 
+__all__ = ("Operator", )
 
-from util.logger import logger
+from operator_lib.util import Config
+class CustomConfig(Config):
+    data_path = "/opt/data"
+    model = "prophet"
+    prediction_length = 1
+    add_time_covariates = False
+    time_periods = ["D"]
 
-class Operator(util.OperatorBase):
+class Operator(OperatorBase):
     __metaclass__ = abc.ABCMeta
+    configType = CustomConfig
 
-    def __init__(self, config):
-        data_path = config.data_path
+    def init(self, *args, **kwargs):
+        super().init(*args, **kwargs)
+        data_path = self.config.data_path
         if not os.path.exists(data_path):
             os.mkdir(data_path)
 
         self.initial_data = True
 
-        self.periods = config.time_periods
+        self.periods = self.config.time_periods
         self.all_possible_periods = {'H', '4H', 'D', 'W', 'M', 'Y'}
         self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month', 'Y': 'Year'}
         self.period_single_or_multi_output = {'H': 'H', 'D': '4H', 'W': 'D', 'M': 'D', 'Y': 'W'}
 
         self.overall_period_consumption_dict = {period: {} for period in self.all_possible_periods}
-
-        self.periods = config.time_periods
 
         self.consumption_same_period_dict = {period: [] for period in self.all_possible_periods}
         
