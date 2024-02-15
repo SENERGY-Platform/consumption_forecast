@@ -8,7 +8,7 @@ class DartNHITS():
             "output_chunk_length": 1
         }
         if config.add_time_covariates:
-            encoders = create_darts_encoder(config.period)
+            encoders = create_darts_encoder(config.time_periods)
             model_kwargs['add_encoders'] = encoders
 
         self.model = NHiTSModel(num_stacks=3, num_blocks=2, num_layers=1, **model_kwargs)
