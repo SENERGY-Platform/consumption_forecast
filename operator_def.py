@@ -32,7 +32,7 @@ class Operator(OperatorBase):
 
         self.initial_data = True
 
-        self.periods = self.config.time_periods
+        self.periods = self.config.time_periods.split(',')
         print(self.periods)
         self.all_possible_periods = {'H', '4H', 'D', 'W', 'M', 'Y'}
         self.period_translation_dict = {'H': 'Hour', 'D': 'Day', 'W': 'Week', 'M': 'Month', 'Y': 'Year'}
