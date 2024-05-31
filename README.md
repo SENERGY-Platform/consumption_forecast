@@ -5,19 +5,27 @@
 | key                | type                                                 | description                                               |
 |--------------------|------------------------------------------------------|-----------------------------------------------------------|
 | `Consumption`            | float                                               | Numeric value that describes any kind of consumption.                     |
-| `Time`            | string                                              | Time stamp of consumption value                    |
+| `Time`            | string                                              | Timestamp of consumption value                    |
 
 ## Output 
 
 | key                | type                                                 | description                                                                       | 
 |--------------------|------------------------------------------------------|-----------------------------------------------------------------------------------|
-| `value`            | string                                               | ID of source providing weather forecast data.                                     |
-| `type`             | string                                               | Anomaly Type                                                                      |
-| `sub_type`         | string                                               | Anomaly Sub Type                                                                  |
-| `mean`             | float                                                | Current mean of point outlier detector that detected the anomaly                  |
-| `threshold`        | float                                                | Threshold that was used to compare with single values                             |
-| `device_id`        | string                                               | Device for which the anomaly was detected                                         |
-| `initial_phase`    | string                                               | Message whether and how long the operator is in the initialization/training phase |
+| `DayPrediction`            | float                                               | Forecasted Consumption for next day.                                    |
+| `DayPredictionTotal`             | float                                               | Forecasted meter reading at end of next day.                                                                      |
+| `DayTimestamp`         | float                                               | Last timestamp of next day.                                                                  |
+| `MonthPrediction`             | float                                                | Forecasted Consumption for next month.                   |
+| `MonthPredictionTotal`        | float                                                | Forecasted meter reading at end of next month.                             |
+| `MonthTimestamp`        | float                                               | Last timestamp of next month.                                        |
+| `YearPrediction`            | float                                               | Forecasted Consumption for next year.                                      |
+| `YearPredictionTotal`             | float                                               | Forecasted meter reading at end of next year.                                                                    |
+| `YearTimestamp`         | float                                               | Last timestamp of next year.                                                                 |
+| `HourPrediction`             | float                                                | Forecasted Consumption for next hour.                  |
+| `HourPredictionTotal`        | float                                                | Forecasted meter reading at end of next hour.                             |
+| `HourTimestamp`        | float                                               | Last timestamp of next hour.                                        |
+| `WeekPrediction`            | float                                               | Forecasted Consumption for next week.                                     |
+| `WeekPredictionTotal`             | float                                               | Forecasted meter reading at end of next week.                                                                       |
+| `WeekTimestamp`         | float                                               | Last timestamp of next week.                                                                  |
 
 
 ## Config options
