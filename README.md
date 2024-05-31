@@ -1,5 +1,25 @@
 # Daily/Weekly/Monthly Forecast
 
+
+## Input
+| key                | type                                                 | description                                               |
+|--------------------|------------------------------------------------------|-----------------------------------------------------------|
+| `Consumption`            | float                                               | Numeric value that describes any kind of consumption.                     |
+| `Time`            | string                                              | Time stamp of consumption value                    |
+
+## Output 
+
+| key                | type                                                 | description                                                                       | 
+|--------------------|------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `value`            | string                                               | ID of source providing weather forecast data.                                     |
+| `type`             | string                                               | Anomaly Type                                                                      |
+| `sub_type`         | string                                               | Anomaly Sub Type                                                                  |
+| `mean`             | float                                                | Current mean of point outlier detector that detected the anomaly                  |
+| `threshold`        | float                                                | Threshold that was used to compare with single values                             |
+| `device_id`        | string                                               | Device for which the anomaly was detected                                         |
+| `initial_phase`    | string                                               | Message whether and how long the operator is in the initialization/training phase |
+
+
 ## Config options
 
 | key                | type                                                    | description                                                    |  default |
