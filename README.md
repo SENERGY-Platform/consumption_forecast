@@ -1,5 +1,33 @@
 # Daily/Weekly/Monthly Forecast
 
+
+## Input
+| key                | type                                                 | description                                               |
+|--------------------|------------------------------------------------------|-----------------------------------------------------------|
+| `Consumption`            | float                                               | Numeric value that describes any kind of consumption.                     |
+| `Time`            | string                                              | Timestamp of consumption value                    |
+
+## Output 
+
+| key                | type                                                 | description                                                                       | 
+|--------------------|------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `DayPrediction`            | float                                               | Forecasted Consumption for next day.                                    |
+| `DayPredictionTotal`             | float                                               | Forecasted meter reading at end of next day.                                                                      |
+| `DayTimestamp`         | float                                               | Last timestamp of next day.                                                                  |
+| `MonthPrediction`             | float                                                | Forecasted Consumption for next month.                   |
+| `MonthPredictionTotal`        | float                                                | Forecasted meter reading at end of next month.                             |
+| `MonthTimestamp`        | float                                               | Last timestamp of next month.                                        |
+| `YearPrediction`            | float                                               | Forecasted Consumption for next year.                                      |
+| `YearPredictionTotal`             | float                                               | Forecasted meter reading at end of next year.                                                                    |
+| `YearTimestamp`         | float                                               | Last timestamp of next year.                                                                 |
+| `HourPrediction`             | float                                                | Forecasted Consumption for next hour.                  |
+| `HourPredictionTotal`        | float                                                | Forecasted meter reading at end of next hour.                             |
+| `HourTimestamp`        | float                                               | Last timestamp of next hour.                                        |
+| `WeekPrediction`            | float                                               | Forecasted Consumption for next week.                                     |
+| `WeekPredictionTotal`             | float                                               | Forecasted meter reading at end of next week.                                                                       |
+| `WeekTimestamp`         | float                                               | Last timestamp of next week.                                                                  |
+
+
 ## Config options
 
 | key                | type                                                    | description                                                    |  default |
