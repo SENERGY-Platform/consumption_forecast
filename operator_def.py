@@ -65,7 +65,7 @@ class Operator(OperatorBase):
         elif self.config.model == 'prophet':
             self.model = DartProphet(self.config)
     
-    def run(self, data, selector='energy_func', topic=''):
+    def run(self, data, selector='energy_func', device_id=''):
         self.timestamp = todatetime(data['Time']).tz_localize(None)
         logger.debug('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
 
