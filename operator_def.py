@@ -19,7 +19,7 @@ class CustomConfig(Config):
     prediction_length = 1
     add_time_covariates = False
     time_periods = ["D"]
-    logger_level = "info"
+    logger_level = "debug"
 
 class Operator(OperatorBase):
     __metaclass__ = abc.ABCMeta
