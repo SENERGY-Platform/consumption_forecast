@@ -13,19 +13,19 @@
 |--------------------|------------------------------------------------------|-----------------------------------------------------------------------------------|
 | `DayPrediction`            | float                                               | Forecasted Consumption for next day.                                    |
 | `DayPredictionTotal`             | float                                               | Forecasted meter reading at end of next day.                                                                      |
-| `DayTimestamp`         | float                                               | Last timestamp of next day.                                                                  |
+| `DayTimestamp`         | float                                               | Last timestamp of current day.                                                                  |
 | `MonthPrediction`             | float                                                | Forecasted Consumption for next month.                   |
 | `MonthPredictionTotal`        | float                                                | Forecasted meter reading at end of next month.                             |
-| `MonthTimestamp`        | float                                               | Last timestamp of next month.                                        |
+| `MonthTimestamp`        | float                                               | Last timestamp of current month.                                        |
 | `YearPrediction`            | float                                               | Forecasted Consumption for next year.                                      |
 | `YearPredictionTotal`             | float                                               | Forecasted meter reading at end of next year.                                                                    |
-| `YearTimestamp`         | float                                               | Last timestamp of next year.                                                                 |
+| `YearTimestamp`         | float                                               | Last timestamp of current year.                                                                 |
 | `HourPrediction`             | float                                                | Forecasted Consumption for next hour.                  |
 | `HourPredictionTotal`        | float                                                | Forecasted meter reading at end of next hour.                             |
-| `HourTimestamp`        | float                                               | Last timestamp of next hour.                                        |
+| `HourTimestamp`        | float                                               | Last timestamp of current hour.                                        |
 | `WeekPrediction`            | float                                               | Forecasted Consumption for next week.                                     |
 | `WeekPredictionTotal`             | float                                               | Forecasted meter reading at end of next week.                                                                       |
-| `WeekTimestamp`         | float                                               | Last timestamp of next week.                                                                  |
+| `WeekTimestamp`         | float                                               | Last timestamp of current week.                                                                  |
 
 
 ## Config options
