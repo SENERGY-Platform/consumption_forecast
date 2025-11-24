@@ -51,13 +51,13 @@ def update_same_period_consumption_lists(timestamp, last_timestamp, data, consum
 def update_period_consumption_dict(period_changed_dict, consumption_same_period_dict, overall_period_consumption_dict):
     for period in consumption_same_period_dict.keys():
         if period_changed_dict[period]:
-            consumption_same_period_dict[period].sort(key= lambda data: todatetime(data['Time']))        
+            consumption_same_period_dict[period].sort(key= lambda data: data["timestamp"])        
             consumption_max = float(consumption_same_period_dict[period][-1]['Consumption'])
             consumption_min = float(consumption_same_period_dict[period][0]['Consumption'])
             overall_period_consumption = consumption_max-consumption_min
 
             if not np.isnan(overall_period_consumption):
-                period_key = todatetime(consumption_same_period_dict[period][-1]['Time']).tz_localize(None).floor('h')
+                period_key = consumption_same_period_dict[period][-1]["timestamp"].floor('h')
                 num_days_in_month = calendar.monthrange(period_key.year, period_key.month)[1]
         
                 if period == 'H':

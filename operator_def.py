@@ -9,6 +9,8 @@ import os
 import pickle
 import abc
 import math
+import typing
+import datetime
 
 __all__ = ("Operator", )
 
@@ -65,18 +67,18 @@ class Operator(OperatorBase):
         elif self.config.model == 'prophet':
             self.model = DartProphet(self.config)
     
-    def run(self, data, selector='energy_func', device_id=''):
-        print(data['Time'])
-        self.timestamp = todatetime(data['Time']).tz_localize(None)
+    def run(self, data: typing.Dict[str, typing.Any], selector: str, device_id, timestamp: datetime.datetime):
+        # Convert to german time and then forget the timezone.
+        self.timestamp = pd.Timestamp(timestamp).tz_localize("Zulu").tz_convert("Europe/Berlin").tz_localize(None)
         logger.debug('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
 
         if self.initial_data:
             for period in self.all_possible_periods:
-                self.consumption_same_period_dict[period] = [data]
+                self.consumption_same_period_dict[period] = [{"data": data, "timestamp": self.timestamp}]
             self.initial_data = False
         
         else:
-            last_timestamp = todatetime(self.consumption_same_period_dict[self.periods[0]][-1]['Time']).tz_localize(None)
+            last_timestamp = self.consumption_same_period_dict[self.periods[0]][-1]["timestamp"]
             if last_timestamp > self.timestamp:
                 return
 
@@ -123,12 +125,13 @@ class Operator(OperatorBase):
                         pickle.dump(self.predicted_values_dict,f)
 
         if at_least_one_period_changed:
+            output_timestamp = self.timestamp.tz_localize("Europe/Berlin").tz_convert("Zulu")
             return {
                 f'{self.period_translation_dict[period]}Prediction': self.predicted_values_dict[period][-1][1] for period in self.periods if self.predicted_values_dict[period]
             }|{
                 f'{self.period_translation_dict[period]}PredictionTotal': self.predicted_values_dict[period][-1][1] + self.last_total_value_dict[period]['Consumption'] for period in self.periods if self.predicted_values_dict[period]
             }|{
-                f'{self.period_translation_dict[period]}Timestamp': self.timestamp.to_period(period).to_timestamp(how="end").strftime('%Y-%m-%d %X') for period in self.periods if self.predicted_values_dict[period]
+                f'{self.period_translation_dict[period]}Timestamp': output_timestamp.to_period(period).to_timestamp(how="end").strftime('%Y-%m-%d %X') for period in self.periods if self.predicted_values_dict[period]
             }
         
 
