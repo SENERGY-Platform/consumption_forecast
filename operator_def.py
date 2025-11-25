@@ -71,14 +71,15 @@ class Operator(OperatorBase):
         # Convert to german time and then forget the timezone.
         self.timestamp = pd.Timestamp(timestamp).tz_localize("Zulu").tz_convert("Europe/Berlin").tz_localize(None)
         logger.debug('energy: '+str(data['Consumption'])+'  '+'time: '+str(self.timestamp))
+        data = {'Consumption': data['Consumption'], 'timestamp': self.timestamp}
 
         if self.initial_data:
             for period in self.all_possible_periods:
-                self.consumption_same_period_dict[period] = [{"data": data, "timestamp": self.timestamp}]
+                self.consumption_same_period_dict[period] = [data]
             self.initial_data = False
         
         else:
-            last_timestamp = self.consumption_same_period_dict[self.periods[0]][-1]["timestamp"]
+            last_timestamp = self.consumption_same_period_dict[self.periods[0]][-1]['timestamp']
             if last_timestamp > self.timestamp:
                 return
 
